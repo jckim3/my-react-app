@@ -12,6 +12,7 @@ export function ThemeProvider({ children }) {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
   return (
+    // value={...}에 들어간 값만 하위 컴포넌트에서 useContext()로 꺼낼 수 있습니다.
     <ThemeContext.Provider value={{ theme, toggleTheme , count, setCount}}>
       {children}
     </ThemeContext.Provider>
