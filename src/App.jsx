@@ -1,22 +1,25 @@
 import { useState, useEffect, useContext } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
-// './Themepage' 로 쓰야됨, node_modules 안에 있는 npm 패키지를 의미함 (❌ 우리가 만든 파일은 해당 안 됨)
-import ThemePage from './ThemePage'; // ✅ ThemePage를 만들어뒀다면 이 줄 꼭 필요
-import UserCard from './UserCard'; // ✅ 추가
-
+import ThemePage from './ThemePage';
+import UserCard from './UserCard';
 import './App.css';
-
 import { ThemeContext, ThemeProvider } from './ThemeContext';
 
 function InnerApp() {
-  // const [count, setCount] = useState(0);
   const { theme, toggleTheme, count, setCount } = useContext(ThemeContext);
-  const [showThemePage, setShowThemePage] = useState(false); // 페이지 전환용
+  const [showThemePage, setShowThemePage] = useState(false);
+  const isDark = theme === 'dark';
 
+  // ✅ 이 부분 추가
   useEffect(() => {
-    console.log(`📢 count 값이 변경되었습니다: ${count}`);
-  }, [count]);
+    const root = document.documentElement; // <html> 요소
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   const users = [
     { name: 'JC', age: 40, job: '개발자' },
@@ -24,69 +27,84 @@ function InnerApp() {
     { name: 'Tom', age: 35, job: 'PM' }
   ];
 
-  // ThemeProvider로 감싸진 컴포넌트 트리 안에서 실행됩니다.
   if (showThemePage) {
     return <ThemePage />;
   }
 
-  // InnerApp 내부
-const handleUserClick = (name) => {
-  alert(`🟢 ${name}님을 클릭했습니다!`);
-};
-
-  const isDark = theme === 'dark';
+  const handleUserClick = (name) => {
+    alert(`🟢 ${name}님을 클릭했습니다!`);
+  };
 
   return (
-    <div
-      style={{
-        textAlign: 'center',
-        marginTop: '50px',
-        backgroundColor: isDark ? '#222' : '#fff',
-        color: isDark ? '#fff' : '#000',
-        minHeight: '100vh',
-        paddingTop: '2rem',
-      }}
-    >
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <button onClick={toggleTheme}>
-        Toggle Theme ({theme})
-      </button>
-      <br /><br />
-      <button onClick={() => setShowThemePage(true)}>다른 페이지로 이동</button> 
+    // <div className={`${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'} min-h-screen py-10 px-4`}>
+    <div className={`min-h-screen py-10 px-4 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+      <div className="max-w-screen-md mx-auto text-center">
+        {/* 로고 */}
+        <div className="flex justify-center gap-4 mb-6">
+          <a href="https://vite.dev" target="_blank">
+            <img src={viteLogo} className="h-12" alt="Vite logo" />
+          </a>
+          <a href="https://react.dev" target="_blank">
+            <img src={reactLogo} className="h-12" alt="React logo" />
+          </a>
+        </div>
 
-      <br /><br />
-      <h2>👥 사용자 카드</h2>
-      {users.map((user, index) => (
-        <UserCard
-          key={index}
-          name={user.name}
-          age={user.age}
-          job={user.job}
-          onClick={handleUserClick}
-        />
-      ))}
+        {/* 제목 */}
+        <h1 className="text-4xl font-bold mb-6">Vite + React</h1>
 
+        {/* Count 버튼 */}
+        <div className="mb-4">
+          <button
+            className="bg-gray-200 text-black rounded px-4 py-2 mb-2"
+            onClick={() => setCount(count + 1)}
+          >
+            count is {count}
+          </button>
+          <p className="text-sm text-gray-500">
+            Edit <code>src/App.jsx</code> and save to test HMR
+          </p>
+        </div>
+
+        {/* 테마 전환 및 페이지 이동 버튼 */}
+        <div className="space-y-2 mb-10">
+          <button
+            className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition"
+            onClick={toggleTheme}
+          >
+            Toggle Theme ({theme})
+          </button>
+          <br />
+          <button
+            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 transition"
+            onClick={() => setShowThemePage(true)}
+          >
+            다른 페이지로 이동
+          </button>
+        </div>
+
+        {/* Tailwind 확인 */}
+        <h1 className="text-3xl font-bold text-blue-900 mb-4">Tailwind 동작 확인</h1>
+        <div className="p-4 rounded bg-white text-black dark:bg-black dark:text-white">
+          Tailwind 다크모드 테스트
+      </div>
+        {/* 사용자 카드 */}
+        <h2 className="text-xl font-semibold mb-4">👥 사용자 카드</h2>
+        <div className="space-y-4">
+          {users.map((user, index) => (
+            <UserCard
+              key={index}
+              name={user.name}
+              age={user.age}
+              job={user.job}
+              onClick={handleUserClick}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
-// ThemeProvider로 감싸줌
 function App() {
   return (
     <ThemeProvider>
