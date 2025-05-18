@@ -1,5 +1,8 @@
-// src/lib/firebaseInit.js
+// src/lib/firebase.js
+
 import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth'; // ✅ 추가
 
 const firebaseConfig = {
   apiKey: "AIzaSyBvjAONdtl-yKLbwxT_pKVjUv4wuBmKOKE",
@@ -12,12 +15,31 @@ const firebaseConfig = {
 };
 
 let appInstance;
+let dbInstance;
+let authInstance;
 
 export function connectFirebase() {
   if (!getApps().length) {
     appInstance = initializeApp(firebaseConfig);
+    dbInstance = getFirestore(appInstance);
+    authInstance = getAuth(appInstance); // ✅ Auth 초기화
     console.log("✅ Firebase 연결됨:", appInstance.name);
   } else {
-    console.log("ℹ️ 이미 연결되어 있음:", getApps()[0].name);
+    appInstance = getApps()[0];
+    dbInstance = getFirestore(appInstance);
+    authInstance = getAuth(appInstance);
+    console.log("ℹ️ 이미 연결되어 있음:", appInstance.name);
   }
+}
+
+export function getDb() {
+  if (!dbInstance) {
+    throw new Error("❌ Firestore가 아직 초기화되지 않았습니다. 먼저 connectFirebase()를 호출하세요.");
+  }
+  return dbInstance;
+}
+
+export function getAuthInstance() {
+  if (!authInstance) throw new Error("❌ Auth 초기화 안됨. connectFirebase 먼저 호출하세요.");
+  return authInstance;
 }
