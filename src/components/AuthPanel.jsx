@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 
 function AuthPanel() {
-  const { user, login, logout, loading } = useAuth();
+  const { user, login, logout, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -17,7 +17,8 @@ function AuthPanel() {
         <>
           <p className="mb-2">
             👤 <strong>{user.displayName}</strong><br />
-            ✉️ {user.email}
+            ✉️ {user.email}<br />
+            🛡️ {isAdmin ? '✅ 관리자 권한 있음' : '🙅‍♂️ 일반 사용자'} //
           </p>
           {user.photoURL && (
             <img src={user.photoURL} alt="user" className="w-16 h-16 rounded-full mb-2" />
