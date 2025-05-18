@@ -3,25 +3,31 @@ import React, { useState } from 'react';
 // import { getDb } from './lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { getDb, getAuthInstance } from './lib/firebase';
+import { useAuth } from './context/AuthContext'; // 🧠 로그인 정보 + 관리자 여부
 
 function UserCard({ name, age, job,onClick }) {
 
   const [selected, setSelected] = useState(false);
+  const { user, isAdmin } = useAuth(); // ✅ 여기서 모든 로그인 정보 받음
+  const db = getDb(); 
+
   const handleClick = async() => {
     setSelected(!selected); // 상태 토글
     onClick?.(name);        // 외부 이벤트 호출 (선택 사항)
 
+    console.log("📧 이메일:", user?.email);
 // 🔥 Firestore에 저장
 
     const timestamp = new Date().toISOString();
-    const db = getDb(); // ✅ 여기가 빠졌었음!
-    const auth = getAuthInstance();
-    const user = auth.currentUser;
+
+    // const auth = getAuthInstance();
+    // const user = auth.currentUser;
     try {
       await addDoc(collection(db, 'user_clicks'), {
         name,
         timestamp,
-        uid: user ? user.uid : null // ✅ 로그인 유저 정보
+        uid: user ? user.uid : null, // ✅ 로그인 유저 정보
+        isAdmin: !!isAdmin
       });
       // console.log(`✅ Firestore 저장 완료: ${name} - ${timestamp}`);
       console.log(`✅ Firestore 저장: ${name}, uid=${user?.uid ?? '비로그인'}, 시간=${timestamp}`);
