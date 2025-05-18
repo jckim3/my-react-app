@@ -6,6 +6,9 @@ import UserCard from './UserCard';
 import './App.css';
 import { ThemeContext, ThemeProvider } from './ThemeContext';
 import { connectFirebase } from './lib/firebase'; // ✅ Firebase 연결 함수
+import { AuthProvider } from './context/AuthContext.jsx'; // ✅ 경로 정확히 확인
+import AuthPanel from './components/AuthPanel';
+
 
 function InnerApp() {
   const { theme, toggleTheme, count, setCount,countDown } = useContext(ThemeContext);
@@ -40,6 +43,8 @@ function InnerApp() {
     // <div className={`${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'} min-h-screen py-10 px-4`}>
     <div className={`min-h-screen py-10 px-4 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
       <div className="max-w-screen-md mx-auto text-center">
+      {/* ✅ 로그인 패널 추가 */}
+      <AuthPanel />
         {/* 로고 */}
         <div className="flex justify-center gap-4 mb-6">
           <a href="https://vite.dev" target="_blank">
@@ -131,9 +136,11 @@ function InnerApp() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <InnerApp />
-    </ThemeProvider>
+     <AuthProvider>
+      <ThemeProvider>
+        <InnerApp />
+      </ThemeProvider>
+     </AuthProvider>
   );
 }
 
