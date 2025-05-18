@@ -31,22 +31,25 @@ function InnerApp() {
     { name: 'Tom', age: 35, job: 'PM' }
   ];
 
-  if (showThemePage) {
-    return <ThemePage />;
-  }
+// 여기서 setShowThemePage를 넘기지 않고 ThemePage를 리턴하고 있어서,
+// ThemePage 안에서 setShowThemePage를 버튼 클릭 시 사용하면 undefined function 호출 에러가 발생.
+// if (showThemePage) {
+//   return <ThemePage />;
+// }
 
   const handleUserClick = (name) => {
     // alert(`🟢 ${name}님을 클릭했습니다!`);
   };
+return (
+  <div className="flex min-h-screen">
+    {/* ✅ 왼쪽 고정 사이드바 */}
+    <Sidebar setShowThemePage={setShowThemePage} />
 
-  return (
-    
-       <div className="flex min-h-screen">
-      {/* ✅ 왼쪽 고정 사이드바 */}
-      <Sidebar />
-
-      {/* ✅ 오른쪽 메인 콘텐츠 */}
-      <div className={`flex-1 ml-64 py-10 px-4 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+    {/* ✅ 오른쪽 메인 콘텐츠 영역 */}
+    <div className={`flex-1 ml-64 py-10 px-4 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+      {showThemePage ? (
+        <ThemePage setShowThemePage={setShowThemePage} />
+      ) : (
         <div className="max-w-screen-md mx-auto text-center">
           <AuthPanel />
 
@@ -99,9 +102,11 @@ function InnerApp() {
             ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
+  
 }
 
 function App() {

@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { ThemeContext } from './ThemeContext';
 
-function ThemePage() {
+function ThemePage({ setShowThemePage }) {
   const { theme, count } = useContext(ThemeContext);
 
   return (
@@ -14,6 +14,12 @@ function ThemePage() {
         <p>
           현재 count 값은 <span className="font-semibold text-blue-600 dark:text-blue-300">{count}</span> 입니다.
         </p>
+        <button
+          onClick={() => setShowThemePage(false)}
+          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+        >
+          ⬅️ 돌아가기
+        </button>
       </div>
     </div>
   );
