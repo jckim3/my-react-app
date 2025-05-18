@@ -70,10 +70,10 @@ function InnerApp() {
           </button>
 
           <button
-          className="bg-red-400 text-white rounded px-4 py-2 mb-2 ml-2"
+          className="bg-red-400 text-blue-500 rounded px-4 py-2 mb-2 ml-2"
           onClick={countDown} // ✅ 여기!
           >
-            Count Down2
+            Count Down3
           </button>
 
           <p className="text-sm text-gray-500">
