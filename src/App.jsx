@@ -5,6 +5,7 @@ import ThemePage from './ThemePage';
 import UserCard from './UserCard';
 import './App.css';
 import { ThemeContext, ThemeProvider } from './ThemeContext';
+import { connectFirebase } from './lib/firebase'; // ✅ Firebase 연결 함수
 
 function InnerApp() {
   const { theme, toggleTheme, count, setCount,countDown } = useContext(ThemeContext);
@@ -32,7 +33,7 @@ function InnerApp() {
   }
 
   const handleUserClick = (name) => {
-    alert(`🟢 ${name}님을 클릭했습니다!`);
+    // alert(`🟢 ${name}님을 클릭했습니다!`);
   };
 
   return (
@@ -74,6 +75,13 @@ function InnerApp() {
           onClick={countDown} // ✅ 여기!
           >
             Count Down3
+          </button>
+
+          <button
+            onClick={connectFirebase}
+            className="bg-yellow-400 text-black rounded px-4 py-2 hover:bg-yellow-500 transition"
+          >
+            🔌 Firebase 연결
           </button>
 
           <p className="text-sm text-gray-500">

@@ -15,6 +15,7 @@ export function ThemeProvider({ children }) {
     setCount((prev) => prev - 1);};
 
   return (
+    // 이건 JSX 문법이고, React에서는 컴포넌트 함수는 JSX를 return해야 합니다.
     // value={...}에 들어간 값만 하위 컴포넌트에서 useContext()로 꺼낼 수 있습니다.
     <ThemeContext.Provider value={{ theme, toggleTheme , count, setCount,countDown}}>
       {children}
