@@ -11,9 +11,12 @@ export function ThemeProvider({ children }) {
   const toggleTheme = () =>
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
+  const countDown = () => {
+    setCount((prev) => prev - 1);};
+
   return (
     // value={...}에 들어간 값만 하위 컴포넌트에서 useContext()로 꺼낼 수 있습니다.
-    <ThemeContext.Provider value={{ theme, toggleTheme , count, setCount}}>
+    <ThemeContext.Provider value={{ theme, toggleTheme , count, setCount,countDown}}>
       {children}
     </ThemeContext.Provider>
   );

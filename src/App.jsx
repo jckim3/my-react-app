@@ -7,7 +7,7 @@ import './App.css';
 import { ThemeContext, ThemeProvider } from './ThemeContext';
 
 function InnerApp() {
-  const { theme, toggleTheme, count, setCount } = useContext(ThemeContext);
+  const { theme, toggleTheme, count, setCount,countDown } = useContext(ThemeContext);
   const [showThemePage, setShowThemePage] = useState(false);
   const isDark = theme === 'dark';
 
@@ -60,6 +60,22 @@ function InnerApp() {
           >
             count is {count}
           </button>
+
+
+          <button
+            className="bg-red-400 text-white rounded px-4 py-2 mb-2 ml-2"
+            onClick={() => setCount((prev) => Math.max(prev - 1, 0))}
+          >
+            Count Down
+          </button>
+
+          <button
+          className="bg-red-400 text-white rounded px-4 py-2 mb-2 ml-2"
+          onClick={countDown} // ✅ 여기!
+          >
+            Count Down2
+          </button>
+
           <p className="text-sm text-gray-500">
             Edit <code>src/App.jsx</code> and save to test HMR
           </p>
