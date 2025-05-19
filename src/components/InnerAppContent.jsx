@@ -1,32 +1,29 @@
-import { useContext, useEffect, useState } from 'react';
-import { ThemeContext } from '../ThemeContext';
-import AuthPanel from './AuthPanel';
+import { useEffect, useState } from 'react';
 import { getDb } from '../lib/firebase';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import AuthPanel from './AuthPanel';
 
 export default function InnerAppContent() {
   const { user } = useAuth();
   const [weeks, setWeeks] = useState([]);
 
   useEffect(() => {
-    const loadFutureWeeks = async () => {
-      const db = getDb();
-      const snap = await getDocs(collection(db, 'golf_weeks'));
-      const now = new Date();
-      now.setHours(0, 0, 0, 0); // 오늘 자정 (00:00) 기준
-      
+    if (!user) return;
+
+    const db = getDb();
+    const colRef = collection(db, 'golf_weeks');
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // 오늘 00:00 기준
+
+    const unsubscribe = onSnapshot(colRef, (snap) => {
       const futureWeeks = snap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(doc => {
-          try {
-            return (
-              (doc.course1 && new Date(doc.course1.teeTime) > now) ||
-              (doc.course2 && new Date(doc.course2.teeTime) > now)
-            );
-          } catch {
-            return false;
-          }
+          const c1 = doc.course1?.teeTime && new Date(doc.course1.teeTime) >= now;
+          const c2 = doc.course2?.teeTime && new Date(doc.course2.teeTime) >= now;
+          return c1 || c2;
         })
         .sort((a, b) => {
           const aTime = new Date(a.course1?.teeTime || a.course2?.teeTime);
@@ -35,27 +32,31 @@ export default function InnerAppContent() {
         });
 
       setWeeks(futureWeeks);
-    };
+    });
 
-    if (user) loadFutureWeeks();
+    return () => unsubscribe();
   }, [user]);
 
   const vote = async (weekId, courseKey) => {
     const db = getDb();
     const docRef = doc(db, 'golf_weeks', weekId);
     const week = weeks.find(w => w.id === weekId);
-    const newVotes = {
-      ...(week.votes || {}),
-      [user.uid]: courseKey
-    };
+    const currentVotes = { ...(week.votes || {}) };
 
-    await updateDoc(docRef, { votes: newVotes });
-    setWeeks(prev =>
-      prev.map(w =>
-        w.id === weekId ? { ...w, votes: newVotes } : w
-      )
-    );
-    alert('✅ 투표가 저장되었습니다.');
+    const currentVote = currentVotes[user.uid];
+    if (currentVote?.course === courseKey) {
+      // ❌ 이미 같은 코스 → 취소
+      delete currentVotes[user.uid];
+    } else {
+      // ✅ 새로 선택 또는 변경
+      currentVotes[user.uid] = {
+        course: courseKey,
+        name: user.displayName || user.email || 'Unknown'
+      };
+    }
+
+    await updateDoc(docRef, { votes: currentVotes });
+    alert('✅ 투표가 반영되었습니다.');
   };
 
   return (
@@ -65,7 +66,16 @@ export default function InnerAppContent() {
 
       {weeks.length > 0 ? (
         weeks.map(week => {
-          const selected = week.votes?.[user.uid] || '';
+          const votes = week.votes || {};
+          const selected = votes[user?.uid]?.course || '';
+
+          const course1Voters = Object.entries(votes)
+            .filter(([_, v]) => v.course === 'course1')
+            .map(([_, v]) => v.name);
+          const course2Voters = Object.entries(votes)
+            .filter(([_, v]) => v.course === 'course2')
+            .map(([_, v]) => v.name);
+
           return (
             <div key={week.id} className="mb-6 border rounded shadow p-4 bg-white dark:bg-gray-800 text-left">
               <h2 className="text-xl font-semibold mb-2">주간 ID: {week.id}</h2>
@@ -79,11 +89,18 @@ export default function InnerAppContent() {
                   <button
                     onClick={() => vote(week.id, 'course1')}
                     className={`mt-2 px-4 py-2 rounded ${
-                      selected === 'course1' ? 'bg-green-600' : 'bg-blue-500'
+                      selected === 'course1' ? 'bg-red-600' : 'bg-blue-500'
                     } text-white hover:bg-opacity-80`}
                   >
-                    {selected === 'course1' ? '✅ 선택됨' : '이 골프장 선택'}
+                    {selected === 'course1'
+                      ? `❌ 선택 취소 (${course1Voters.length}명)`
+                      : `${course1Voters.length}명 선택하기`}
                   </button>
+                  {course1Voters.length > 0 && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      👤 {course1Voters.join(', ')}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -96,11 +113,18 @@ export default function InnerAppContent() {
                   <button
                     onClick={() => vote(week.id, 'course2')}
                     className={`mt-2 px-4 py-2 rounded ${
-                      selected === 'course2' ? 'bg-green-600' : 'bg-blue-500'
+                      selected === 'course2' ? 'bg-red-600' : 'bg-blue-500'
                     } text-white hover:bg-opacity-80`}
                   >
-                    {selected === 'course2' ? '✅ 선택됨' : '이 골프장 선택'}
+                    {selected === 'course2'
+                      ? `❌ 선택 취소 (${course2Voters.length}명)`
+                      : `${course2Voters.length}명 선택하기`}
                   </button>
+                  {course2Voters.length > 0 && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      👤 {course2Voters.join(', ')}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
