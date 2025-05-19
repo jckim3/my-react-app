@@ -1,55 +1,109 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { ThemeContext } from '../ThemeContext';
 import AuthPanel from './AuthPanel';
-import ThemePage from '../ThemePage';
-import { connectFirebase } from '../lib/firebase';
-import reactLogo from '../assets/react.svg';
-import viteLogo from '/vite.svg';
+import { getDb } from '../lib/firebase';
+import { collection, getDocs, updateDoc } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
 
 export default function InnerAppContent() {
-  const { theme, toggleTheme, count, setCount, countDown } = useContext(ThemeContext);
+  const { user } = useAuth();
+  const [weekData, setWeekData] = useState(null);
+  const [selected, setSelected] = useState('');
+
+  useEffect(() => {
+    const loadClosestWeek = async () => {
+      const db = getDb();
+      const snap = await getDocs(collection(db, 'golf_weeks'));
+      const now = new Date();
+
+      // 🔹 미래 티타임을 가진 주 중 가장 가까운 것 찾기
+      const futureWeeks = snap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(doc => {
+          try {
+            return (
+              (doc.course1 && new Date(doc.course1.teeTime) > now) ||
+              (doc.course2 && new Date(doc.course2.teeTime) > now)
+            );
+          } catch {
+            return false;
+          }
+        })
+        .sort((a, b) => {
+          const aTime = new Date(a.course1?.teeTime || a.course2?.teeTime);
+          const bTime = new Date(b.course1?.teeTime || b.course2?.teeTime);
+          return aTime - bTime;
+        });
+
+      if (futureWeeks.length > 0) {
+        const data = futureWeeks[0];
+        setWeekData(data);
+        if (data.votes && user?.uid) {
+          setSelected(data.votes[user.uid]);
+        }
+      }
+    };
+
+    if (user) loadClosestWeek();
+  }, [user]);
+
+  const vote = async (courseKey) => {
+    const db = getDb();
+    const ref = collection(db, 'golf_weeks');
+    const docRef = doc(db, 'golf_weeks', weekData.id);
+
+    const newVotes = {
+      ...(weekData.votes || {}),
+      [user.uid]: courseKey
+    };
+
+    await updateDoc(docRef, { votes: newVotes });
+    setSelected(courseKey);
+    alert('✅ 투표가 저장되었습니다.');
+  };
 
   return (
-    <div className={`max-w-screen-md mx-auto text-center`}>
+    <div className="max-w-screen-md mx-auto text-center">
       <AuthPanel />
+      <h1 className="text-3xl font-bold mb-6">🏌️ 이번 주 골프장 투표</h1>
 
-      <div className="flex justify-center gap-4 mb-6">
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="h-12" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="h-12" alt="React logo" />
-        </a>
-      </div>
+      {weekData?.course1 && (
+        <div className="border p-4 mb-4 rounded shadow bg-white dark:bg-gray-800 text-left">
+          <div className="font-bold text-lg">⛳ {weekData.course1.courseName}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            🕒 {new Date(weekData.course1.teeTime).toLocaleString()}
+          </div>
+          <button
+            onClick={() => vote('course1')}
+            className={`mt-2 px-4 py-2 rounded ${
+              selected === 'course1' ? 'bg-green-600' : 'bg-blue-500'
+            } text-white hover:bg-opacity-80`}
+          >
+            {selected === 'course1' ? '✅ 선택됨' : '이 골프장 선택'}
+          </button>
+        </div>
+      )}
 
-      <h1 className="text-4xl font-bold mb-6">Vite + React</h1>
+      {weekData?.course2 && (
+        <div className="border p-4 rounded shadow bg-white dark:bg-gray-800 text-left">
+          <div className="font-bold text-lg">⛳ {weekData.course2.courseName}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            🕒 {new Date(weekData.course2.teeTime).toLocaleString()}
+          </div>
+          <button
+            onClick={() => vote('course2')}
+            className={`mt-2 px-4 py-2 rounded ${
+              selected === 'course2' ? 'bg-green-600' : 'bg-blue-500'
+            } text-white hover:bg-opacity-80`}
+          >
+            {selected === 'course2' ? '✅ 선택됨' : '이 골프장 선택'}
+          </button>
+        </div>
+      )}
 
-      <div className="mb-4">
-        <button className="bg-gray-200 text-black rounded px-4 py-2 mb-2" onClick={() => setCount(count + 1)}>
-          count is {count}
-        </button>
-        <button className="bg-red-400 text-white rounded px-4 py-2 mb-2 ml-2" onClick={() => setCount((prev) => Math.max(prev - 1, 0))}>
-          Count Down
-        </button>
-        <button className="bg-red-400 text-blue-500 rounded px-4 py-2 mb-2 ml-2" onClick={countDown}>
-          Count Down3
-        </button>
-        <button onClick={connectFirebase} className="bg-yellow-400 text-black rounded px-4 py-2 hover:bg-yellow-500 transition">
-          🔌 Firebase 연결
-        </button>
-        <p className="text-sm text-gray-500">Edit <code>src/App.jsx</code> and save to test HMR</p>
-      </div>
-
-      <div className="space-y-2 mb-10">
-        <button className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition" onClick={toggleTheme}>
-          Toggle Theme ({theme})
-        </button>
-      </div>
-
-      <h1 className="text-3xl font-bold text-blue-900 mb-4">Tailwind 동작 확인</h1>
-      <div className="p-4 rounded bg-white text-black dark:bg-black dark:text-white">
-        Tailwind 다크모드 테스트
-      </div>
+      {!weekData && (
+        <p className="text-gray-500 mt-4">이번 주 골프장 정보가 없습니다.</p>
+      )}
     </div>
   );
 }
