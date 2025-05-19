@@ -10,6 +10,13 @@ import { AuthProvider } from './context/AuthContext.jsx'; // ✅ 경로 정확�
 import AuthPanel from './components/AuthPanel';
 import Sidebar from './components/Sidebar'; // 추가
 
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route
+} from 'react-router-dom';
+import AdminGolfPage from './components/AdminGolfPage'; // ✅ 관리자 페이지
+
 function InnerApp() {
   const { theme, toggleTheme, count, setCount,countDown } = useContext(ThemeContext);
   const [showThemePage, setShowThemePage] = useState(false);
@@ -111,11 +118,16 @@ return (
 
 function App() {
   return (
-     <AuthProvider>
+    <AuthProvider>
       <ThemeProvider>
-        <InnerApp />
+        <Router>
+          <Routes>
+            <Route path="/" element={<InnerApp />} />
+            <Route path="/admin/golf" element={<AdminGolfPage />} />
+          </Routes>
+        </Router>
       </ThemeProvider>
-     </AuthProvider>
+    </AuthProvider>
   );
 }
 

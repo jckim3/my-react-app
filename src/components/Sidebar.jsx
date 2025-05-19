@@ -1,7 +1,9 @@
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom'; // 필요
 
 function Sidebar({ setShowThemePage }) {
   const { isAdmin } = useAuth();
+ const navigate = useNavigate(); // ✅ 여기가 중요합니다!
 
   return (
     <aside className="w-64 bg-gray-800 text-white min-h-screen p-4 fixed top-0 left-0">
@@ -19,10 +21,11 @@ function Sidebar({ setShowThemePage }) {
         >
           ⚙️ 설정
         </button>
+
         {isAdmin && (
           <button
             className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-            onClick={() => alert('관리자 메뉴 클릭')}
+            onClick={() => navigate('/admin/golf')} // ✅ 관리자 페이지로 이동
           >
             🛡️ 관리자 전용
           </button>
