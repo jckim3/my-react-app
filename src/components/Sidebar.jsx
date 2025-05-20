@@ -21,6 +21,14 @@ function Sidebar() {
         >
           🏌️ 내 스코어
         </button>
+
+        <button
+          className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
+          onClick={() => navigate('/all-scores')} // ✅ 전체 스코어 화면으로 이동
+        >
+          📊 전체 스코어
+        </button>
+
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
           onClick={() => navigate('/settings')} // ✅ 설정 페이지로 이동
