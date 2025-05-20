@@ -13,7 +13,6 @@ export default function InnerAppContent() {
 
     const db = getDb();
     const colRef = collection(db, 'golf_weeks');
-
     const now = new Date();
     now.setHours(0, 0, 0, 0); // 오늘 00:00 기준
 
@@ -21,21 +20,25 @@ export default function InnerAppContent() {
       const futureWeeks = snap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(doc => {
-          const c1 = doc.course1?.teeTime && new Date(doc.course1.teeTime) >= now;
-          const c2 = doc.course2?.teeTime && new Date(doc.course2.teeTime) >= now;
-          return c1 || c2;
+          const datePart = doc.id.split('_')[0]; // "2025-05-24"
+          const docDate = new Date(datePart);
+          const include = docDate >= now;
+          console.log(`📌 FILTER → ID: ${doc.id} | DateOnly: ${docDate.toISOString().slice(0, 10)} | Include: ${include}`);
+          return include;
         })
-        .sort((a, b) => {
-          const aTime = new Date(a.course1?.teeTime || a.course2?.teeTime);
-          const bTime = new Date(b.course1?.teeTime || b.course2?.teeTime);
-          return aTime - bTime;
-        });
+      // .sort((a, b) => {
+      //   const aDate = new Date(a.id.replace('_', 'T').replace(/-/g, ':').replace(/:/, '-'));
+      //   const bDate = new Date(b.id.replace('_', 'T').replace(/-/g, ':').replace(/:/, '-'));
+      //   console.log(`🧮 SORT → A: ${a.id} → ${aDate.toISOString()} | B: ${b.id} → ${bDate.toISOString()}`);
+      //   return aDate - bDate;
+      // });
 
       setWeeks(futureWeeks);
     });
 
     return () => unsubscribe();
   }, [user]);
+
 
   const vote = async (weekId, courseKey) => {
     const db = getDb();
@@ -67,72 +70,56 @@ export default function InnerAppContent() {
       {weeks.length > 0 ? (
         weeks.map(week => {
           const votes = week.votes || {};
-          const selected = votes[user?.uid]?.course || '';
-
-          const course1Voters = Object.entries(votes)
-            .filter(([_, v]) => v.course === 'course1')
-            .map(([_, v]) => v.name);
-          const course2Voters = Object.entries(votes)
-            .filter(([_, v]) => v.course === 'course2')
-            .map(([_, v]) => v.name);
+          const course = week.course;
 
           return (
             <div key={week.id} className="mb-6 border rounded shadow p-4 bg-white dark:bg-gray-800 text-left">
-              <h2 className="text-xl font-semibold mb-2">주간 ID: {week.id}</h2>
+              <p className="font-semibold text-lg mb-2">📅 주간 날짜: {week.id.split('_')[0]}</p>
+              <p className="font-bold text-lg mb-2">⛳ {course?.courseName || '골프장 이름 없음'}</p>
 
-              {week.course1 && (
-                <div className="mb-4">
-                  <div className="font-bold">⛳ {week.course1.courseName}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    🕒 {new Date(week.course1.teeTime).toLocaleString()}
-                  </div>
-                  <button
-                    onClick={() => vote(week.id, 'course1')}
-                    className={`mt-2 px-4 py-2 rounded ${
-                      selected === 'course1' ? 'bg-red-600' : 'bg-blue-500'
-                    } text-white hover:bg-opacity-80`}
-                  >
-                    {selected === 'course1'
-                      ? `❌ 선택 취소 (${course1Voters.length}명)`
-                      : `${course1Voters.length}명 선택하기`}
-                  </button>
-                  {course1Voters.length > 0 && (
-                    <div className="text-sm text-gray-500 mt-1">
-                      👤 {course1Voters.join(', ')}
-                    </div>
-                  )}
-                </div>
-              )}
+              {course?.teeTimes?.map((teeTime, index) => {
+                const timeKey = `${course.courseId}_${teeTime}`; // 유일한 키
+                const selected = votes[user?.uid]?.course === timeKey;
 
-              {week.course2 && (
-                <div>
-                  <div className="font-bold">⛳ {week.course2.courseName}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    🕒 {new Date(week.course2.teeTime).toLocaleString()}
-                  </div>
-                  <button
-                    onClick={() => vote(week.id, 'course2')}
-                    className={`mt-2 px-4 py-2 rounded ${
-                      selected === 'course2' ? 'bg-red-600' : 'bg-blue-500'
-                    } text-white hover:bg-opacity-80`}
-                  >
-                    {selected === 'course2'
-                      ? `❌ 선택 취소 (${course2Voters.length}명)`
-                      : `${course2Voters.length}명 선택하기`}
-                  </button>
-                  {course2Voters.length > 0 && (
-                    <div className="text-sm text-gray-500 mt-1">
-                      👤 {course2Voters.join(', ')}
+                const voters = Object.entries(votes)
+                  .filter(([_, v]) => v.course === timeKey)
+                  .map(([_, v]) => v.name);
+
+                return (
+                  <div key={timeKey} className="mb-4 ml-4 border-l-2 pl-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                      🕒 티타임: {new Date(teeTime).toLocaleString()}
                     </div>
-                  )}
-                </div>
-              )}
+                    <p className="text-sm text-blue-600 underline mt-1">
+                      🔗 <a href={`/courses/${course.courseId}`} target="_blank" rel="noopener noreferrer">
+                        골프장 상세 보기
+                      </a>
+                    </p>
+
+                    <button
+                      onClick={() => vote(week.id, timeKey)}
+                      className={`mt-2 px-4 py-2 rounded ${selected ? 'bg-red-600' : 'bg-blue-500'} text-white hover:bg-opacity-80`}
+                    >
+                      {selected
+                        ? `❌ 선택 취소 (${voters.length}명)`
+                        : `${voters.length}명 선택하기`}
+                    </button>
+
+                    {voters.length > 0 && (
+                      <div className="text-sm text-gray-500 mt-1">
+                        👤 {voters.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
         })
       ) : (
         <p className="text-gray-500">미래에 예정된 골프장이 없습니다.</p>
       )}
+
     </div>
   );
 }

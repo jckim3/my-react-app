@@ -16,6 +16,15 @@ const generateDocIdFromTeeTime = (teeTime) => {
   return `${yyyy}-${mm}-${dd}_${hh}-${min}`;
 };
 
+function formatDateLocal(dt) {
+  const yyyy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  const hh = String(dt.getHours()).padStart(2, '0');
+  const min = String(dt.getMinutes()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
 export default function SetWeeklyCourse() {
   const [courses, setCourses] = useState([]);
   const [inputs, setInputs] = useState([
@@ -35,7 +44,7 @@ export default function SetWeeklyCourse() {
       const weekSnap = await getDocs(collection(db, 'golf_weeks'));
       const now = new Date();
       const nowIso = new Date().toISOString();
-      
+
       const items = weekSnap.docs
         .map(doc => {
           const data = doc.data();
@@ -137,13 +146,44 @@ export default function SetWeeklyCourse() {
           </select>
 
           {[0, 1].map(i => (
-            <input
-              key={i}
-              type="datetime-local"
-              className="border p-2 rounded w-full mb-2"
-              value={input.teeTimes[i]}
-              onChange={(e) => updateInput(index, `teeTime${i}`, e.target.value)}
-            />
+            <div key={i} className="relative mb-2">
+              <input
+                type="datetime-local"
+                className="border p-2 rounded w-full"
+                value={input.teeTimes[i]}
+                onChange={(e) => updateInput(index, `teeTime${i}`, e.target.value)}
+                onFocus={() => {
+                  if (i === 1 && !input.teeTimes[1] && input.teeTimes[0]) {
+                    // 첫 번째 티타임에서 +10분 계산
+                    const dt = new Date(input.teeTimes[0]);
+                    dt.setMinutes(dt.getMinutes() + 10);
+
+                    // datetime-local 포맷에 맞게 변환 (YYYY-MM-DDTHH:mm)
+                    // const suggested = dt.toISOString().slice(0, 16);
+                    const localFormatted = formatDateLocal(dt); // ← ✅ 수정
+                    // 입력 상태 업데이트
+                    const updated = [...inputs];
+                    updated[index].teeTimes[1] = localFormatted;
+                    setInputs(updated);
+                  }
+                }}
+              />
+              {i === 1 && input.teeTimes[1] && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = [...inputs];
+                    updated[index].teeTimes[1] = '';
+                    setInputs(updated);
+                  }}
+                  className="absolute right-2 top-2 text-red-500 text-sm"
+                  title="티타임 삭제"
+                >
+                  ❌
+                </button>
+              )}
+            </div>
+
           ))}
 
           <div className="flex gap-2">
