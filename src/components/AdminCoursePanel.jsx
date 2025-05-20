@@ -14,8 +14,16 @@ export default function AdminCoursePanel() {
 
   const fetchCourses = async () => {
     const db = getDb();
-    const snap = await getDocs(collection(db, 'courses'));
-    setCourses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+    //snap은 Firestore에서 데이터를 가져온 결과 전체를 담고 있는 객체
+    // 1. coorection -> docuemnts -> data
+    const snap = await getDocs(collection(db, 'courses')); // get sanp of 'courses' correction
+    const sortedCourses = snap.docs
+      // ...doc.data() → 그 안의 필드들을 { id: ..., name: ..., address: ..., link: ... } 형식으로 펼쳐 넣기
+      .map(doc => ({ id: doc.id, ...doc.data() }))        // docs는 DocumentSnapshot[]
+      .sort((a, b) => a.name.localeCompare(b.name));      // 이름순 정렬
+
+    setCourses(sortedCourses);
   };
 
   const addCourse = async () => {

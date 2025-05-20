@@ -3,11 +3,29 @@ import { getDb } from '../lib/firebase';
 import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import AuthPanel from './AuthPanel';
+import { getDocs } from 'firebase/firestore';
 
 export default function InnerAppContent() {
   const { user } = useAuth();
   const [weeks, setWeeks] = useState([]);
+  const [coursesMap, setCoursesMap] = useState({});
 
+  // 🧭 Load all course info
+  useEffect(() => {
+
+    const loadCourses = async () => {
+      const db = getDb();
+      const snapshot = await getDocs(collection(db, 'courses'));
+      const map = {};
+      snapshot.docs.forEach(doc => {
+        map[doc.id] = doc.data(); // address, link, name
+      });
+      setCoursesMap(map);
+    };
+    loadCourses();
+  }, []);
+
+  // 📅 Load upcoming golf weeks
   useEffect(() => {
     if (!user) return;
 
@@ -71,48 +89,66 @@ export default function InnerAppContent() {
         weeks.map(week => {
           const votes = week.votes || {};
           const course = week.course;
+          const courseInfo = coursesMap[course.courseId] || {};
+
 
           return (
             <div key={week.id} className="mb-6 border rounded shadow p-4 bg-white dark:bg-gray-800 text-left">
               <p className="font-semibold text-lg mb-2">📅 주간 날짜: {week.id.split('_')[0]}</p>
-              <p className="font-bold text-lg mb-2">⛳ {course?.courseName || '골프장 이름 없음'}</p>
 
-              {course?.teeTimes?.map((teeTime, index) => {
-                const timeKey = `${course.courseId}_${teeTime}`; // 유일한 키
-                const selected = votes[user?.uid]?.course === timeKey;
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xl font-bold text-green-700 flex items-center gap-2">
+                  <span>⛳ {course?.courseName || '골프장 이름 없음'}</span>
+                </div>
+                <a
+                  // href={`/courses/${course.courseId}`}
+                  href={courseInfo.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 underline"
+                >
+                  🔗 골프장 상세 보기
+                </a>
+              </div>
 
-                const voters = Object.entries(votes)
-                  .filter(([_, v]) => v.course === timeKey)
-                  .map(([_, v]) => v.name);
+              {
+                course?.teeTimes?.map((teeTime, index) => {
+                  const timeKey = `${course.courseId}_${teeTime}`; // 유일한 키
+                  const selected = votes[user?.uid]?.course === timeKey;
 
-                return (
-                  <div key={timeKey} className="mb-4 ml-4 border-l-2 pl-4">
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      🕒 티타임: {new Date(teeTime).toLocaleString()}
-                    </div>
-                    <p className="text-sm text-blue-600 underline mt-1">
-                      🔗 <a href={`/courses/${course.courseId}`} target="_blank" rel="noopener noreferrer">
-                        골프장 상세 보기
-                      </a>
-                    </p>
+                  const voters = Object.entries(votes)
+                    .filter(([_, v]) => v.course === timeKey)
+                    .map(([_, v]) => v.name);
 
-                    <button
-                      onClick={() => vote(week.id, timeKey)}
-                      className={`mt-2 px-4 py-2 rounded ${selected ? 'bg-red-600' : 'bg-blue-500'} text-white hover:bg-opacity-80`}
-                    >
-                      {selected
-                        ? `❌ 선택 취소 (${voters.length}명)`
-                        : `${voters.length}명 선택하기`}
-                    </button>
-
-                    {voters.length > 0 && (
-                      <div className="text-sm text-gray-500 mt-1">
-                        👤 {voters.join(', ')}
+                  return (
+                    <div key={timeKey} className="mb-4 ml-4 border-l-2 pl-4">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
+                        🕒 티타임: {new Date(teeTime).toLocaleString()}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {/* <p className="text-sm text-blue-600 underline mt-1">
+                        🔗 <a href={`/courses/${course.courseId}`} target="_blank" rel="noopener noreferrer">
+                          골프장 상세 보기
+                        </a>
+                      </p> */}
+
+                      <button
+                        onClick={() => vote(week.id, timeKey)}
+                        className={`mt-2 px-4 py-2 rounded ${selected ? 'bg-red-600' : 'bg-blue-500'} text-white hover:bg-opacity-80`}
+                      >
+                        {selected
+                          ? `❌ 선택 취소 (${voters.length}명)`
+                          : `${voters.length}명 선택하기`}
+                      </button>
+
+                      {voters.length > 0 && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          👤 {voters.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              }
             </div>
           );
         })
@@ -120,6 +156,6 @@ export default function InnerAppContent() {
         <p className="text-gray-500">미래에 예정된 골프장이 없습니다.</p>
       )}
 
-    </div>
+    </div >
   );
 }
