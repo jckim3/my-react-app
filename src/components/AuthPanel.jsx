@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 
 function AuthPanel() {
-  const { user, login, logout, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -11,33 +11,27 @@ function AuthPanel() {
     );
   }
 
+  if (!user) return null;
+
   return (
-    <div className="border p-4 rounded shadow mb-4 bg-white text-black dark:bg-gray-800 dark:text-white">
-      {user ? (
-        <>
-          <p className="mb-2">
-            👤 <strong>{user.displayName}</strong><br />
-            ✉️ {user.email}<br />
-            🛡️ {isAdmin ? '✅ 관리자 권한 있음' : '🙅‍♂️ 일반 사용자'} //
-          </p>
-          {user.photoURL && (
-            <img src={user.photoURL} alt="user" className="w-16 h-16 rounded-full mb-2" />
-          )}
-          <button
-            onClick={logout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            로그아웃
-          </button>
-        </>
-      ) : (
-        <button
-          onClick={login}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Google 로그인
-        </button>
+    <div className="flex items-center gap-6 border p-6 rounded shadow mb-6 bg-white text-black dark:bg-gray-800 dark:text-white max-w-xl mx-auto">
+      {/* 프로필 이미지 */}
+      {user.photoURL && (
+        <img
+          src={user.photoURL}
+          alt="user"
+          className="w-24 h-24 rounded-full object-cover border"
+        />
       )}
+
+      {/* 텍스트 정보 */}
+      <div className="text-left space-y-1">
+        <p className="text-xl font-semibold">👤 {user.displayName}</p>
+        <p className="text-gray-700 dark:text-gray-300">📧 {user.email}</p>
+        <p className="text-blue-600 dark:text-blue-300">
+          🛡️ {isAdmin ? '✅ 관리자 권한 있음' : '🙅‍♂️ 일반 사용자'}
+        </p>
+      </div>
     </div>
   );
 }

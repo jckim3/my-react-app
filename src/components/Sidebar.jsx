@@ -1,15 +1,21 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ClipboardDocumentIcon } from '@heroicons/react/24/outline';
 
 function Sidebar({ isOpen, onClose, isMobile }) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, logout } = useAuth(); // ✅ logout 가져오기
   const navigate = useNavigate();
-  console.log('🔍 Sidebar rendered. isOpen:', isOpen);
 
   const handleNav = (path) => {
     navigate(path);
     if (isMobile) onClose();
   };
+
+  const handleLogout = async () => {
+    await logout();         // 로그아웃 실행
+    navigate('/login');     // ✅ 로그인 페이지로 이동
+  };
+
 
   return (
     <aside
@@ -23,7 +29,14 @@ function Sidebar({ isOpen, onClose, isMobile }) {
         ✕
       </button>
 
-      <h2 className="text-xl font-bold mb-6">📋 메뉴</h2>
+      {/* 타이틀 영역 */}
+      <div className="flex items-center space-x-2 group cursor-pointer">
+        <ClipboardDocumentIcon className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
+        <h2 className="text-2xl font-bold">Swing Vote</h2>
+      </div>
+      <hr className="border-t border-gray-600 mb-4" />
+
+      {/* 메뉴 네비게이션 */}
       <nav className="space-y-2">
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
@@ -66,6 +79,16 @@ function Sidebar({ isOpen, onClose, isMobile }) {
           </>
         )}
       </nav>
+
+      {/* ✅ 하단 로그아웃 버튼 (고정 위치) */}
+      <div className="absolute bottom-4 left-4 right-4">
+        <button
+          className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded transition"
+          onClick={handleLogout}
+        >
+          로그아웃
+        </button>
+      </div>
     </aside>
   );
 }

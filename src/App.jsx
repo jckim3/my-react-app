@@ -6,10 +6,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AdminGolfPage from './components/AdminGolfPage';
 import InnerAppContent from './components/InnerAppContent';
 import Layout from './components/Layout';
-import ThemePage from './ThemePage'; // ✅ 추가
-import MyScorePanel from './components/MyScorePanel'; // ✅ 추가
-import AllScoresPanel from './components/AllScoresPanel'; // ✅ 전체 스코어 페이지 추가
+import ThemePage from './ThemePage';
+import MyScorePanel from './components/MyScorePanel';
+import AllScoresPanel from './components/AllScoresPanel';
 import AdminMemberPanel from './components/AdminMemberPanel';
+import LoginPage from './components/LoginPage'; // ✅ 로그인 페이지 import 추가
 
 function App() {
   return (
@@ -18,12 +19,14 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Layout><InnerAppContent /></Layout>} />
-            <Route path="/settings" element={<Layout><ThemePage /></Layout>} />  {/* ✅ 추가 */}
-            <Route path="/my-score" element={<Layout><MyScorePanel /></Layout>} /> {/* ✅ 추가된 내 스코어 페이지 */}
-            <Route path="/all-scores" element={<Layout><AllScoresPanel /></Layout>} /> {/* ✅ 전체 스코어 페이지 */}
+            <Route path="/settings" element={<Layout><ThemePage /></Layout>} />
+            <Route path="/my-score" element={<Layout><MyScorePanel /></Layout>} />
+            <Route path="/all-scores" element={<Layout><AllScoresPanel /></Layout>} />
             <Route path="/admin/golf" element={<Layout><AdminGolfPage /></Layout>} />
             <Route path="/admin/members" element={<Layout><AdminMemberPanel /></Layout>} />
 
+            {/* ✅ 로그인 페이지 경로 추가 */}
+            <Route path="/login" element={<LoginPage />} />
           </Routes>
         </Router>
       </ThemeProvider>
