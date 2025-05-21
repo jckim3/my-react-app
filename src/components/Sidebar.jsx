@@ -1,45 +1,53 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+  console.log('🔍 Sidebar rendered. isOpen:', isOpen);
 
   return (
-    <aside className="w-64 bg-gray-800 text-white min-h-screen p-4 fixed top-0 left-0">
+    <aside
+      className={`w-64 bg-gray-800 text-white h-screen p-4 fixed top-0 left-0 z-20 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+    >
+      {/* 닫기 버튼 (모바일용) */}
+      <button
+        className="absolute top-2 right-2 text-white md:hidden"
+        onClick={onClose}
+      >
+        ✕
+      </button>
+
       <h2 className="text-xl font-bold mb-6">📋 메뉴</h2>
       <nav className="space-y-2">
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/')} // ✅ 홈으로 이동
+          onClick={() => navigate('/')}
         >
           🏠 홈
         </button>
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/my-score')} // ✅ 내 스코어 화면으로 이동
+          onClick={() => navigate('/my-score')}
         >
           🏌️ 내 스코어
         </button>
-
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/all-scores')} // ✅ 전체 스코어 화면으로 이동
+          onClick={() => navigate('/all-scores')}
         >
           📊 전체 스코어
         </button>
-
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/settings')} // ✅ 설정 페이지로 이동
+          onClick={() => navigate('/settings')}
         >
           ⚙️ 설정
         </button>
-
         {isAdmin && (
           <button
             className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-            onClick={() => navigate('/admin/golf')} // ✅ 관리자 페이지로 이동
+            onClick={() => navigate('/admin/golf')}
           >
             🛡️ 관리자 전용
           </button>
