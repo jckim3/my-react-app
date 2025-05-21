@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { getDb } from '../lib/firebase';
 import {
-  collection, getDocs, addDoc, deleteDoc, doc, updateDoc
+  collection, getDocs, addDoc, deleteDoc, doc, updateDoc, query,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 
 export default function AdminCoursePanel() {
@@ -11,6 +13,7 @@ export default function AdminCoursePanel() {
   const [link, setLink] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editFields, setEditFields] = useState({});
+  const [handicapData, setHandicapData] = useState([]);
 
   const fetchCourses = async () => {
     const db = getDb();
@@ -25,6 +28,58 @@ export default function AdminCoursePanel() {
 
     setCourses(sortedCourses);
   };
+
+  const fetchLatestHandicaps = async () => {
+    const db = getDb();
+    const userSnap = await getDocs(collection(db, 'golf_scores'));
+
+    console.log('📥 유저 수:', userSnap.size);
+
+    const promises = userSnap.docs.map(async (userDoc) => {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+      const userName = userData.name || 'Unknown';
+
+      console.log(`🧾 유저 ID: ${userId}, 이름: ${userName}`);
+
+      const historyRef = collection(db, `golf_scores/${userId}/handy_history`);
+      const q = query(historyRef, orderBy('calculatedAt', 'desc'), limit(1));
+
+      try {
+        const latestSnap = await getDocs(q);
+
+        if (latestSnap.empty) {
+          console.log(`⚠️ ${userName} (ID: ${userId})는 handy_history가 없음`);
+          return null;
+        }
+
+        const latestDoc = latestSnap.docs[0];
+        const latest = latestDoc.data();
+
+        console.log(`✅ ${userName} 최근 handy:`, latest);
+
+        return {
+          name: userName,
+          userId,
+          docId: latestDoc.id,
+          roundCount: latest.roundCount,
+          scoreAverage: latest.scoreAverage,
+          calculatedAt: latest.calculatedAt
+            ? new Date(latest.calculatedAt).toLocaleDateString()
+            : ''
+        };
+      } catch (error) {
+        console.error(`❌ ${userName} handy_history 로딩 중 오류:`, error);
+        return null;
+      }
+    });
+
+    const result = (await Promise.all(promises)).filter(item => item !== null);
+    console.log('📊 최종 핸디캡 데이터:', result);
+
+    setHandicapData(result);
+  };
+
 
   const addCourse = async () => {
     const db = getDb();
@@ -71,6 +126,7 @@ export default function AdminCoursePanel() {
 
   useEffect(() => {
     fetchCourses();
+    fetchLatestHandicaps(); // 🔹 핸디캡 정보도 함께 불러옴
   }, []);
 
   return (
@@ -147,6 +203,28 @@ export default function AdminCoursePanel() {
           </li>
         ))}
       </ul>
+      <h4 className="text-lg font-bold mt-10 mb-2">🏌️‍♂️ 멤버 핸디캡 현황</h4>
+      <table className="table-auto w-full border text-sm">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="border px-2 py-1">이름</th>
+            <th className="border px-2 py-1">평균 점수</th>
+            <th className="border px-2 py-1">라운드 수</th>
+            <th className="border px-2 py-1">계산 날짜</th>
+          </tr>
+        </thead>
+        <tbody>
+          {handicapData.map((item, idx) => (
+            <tr key={idx} className="text-center">
+              <td className="border px-2 py-1">{item.name}</td>
+              <td className="border px-2 py-1">{item.scoreAverage}</td>
+              <td className="border px-2 py-1">{item.roundCount}</td>
+              <td className="border px-2 py-1">{item.calculatedAt}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
     </div>
   );
 }
