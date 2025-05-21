@@ -9,6 +9,7 @@ import Layout from './components/Layout';
 import ThemePage from './ThemePage'; // ✅ 추가
 import MyScorePanel from './components/MyScorePanel'; // ✅ 추가
 import AllScoresPanel from './components/AllScoresPanel'; // ✅ 전체 스코어 페이지 추가
+import AdminMemberPanel from './components/AdminMemberPanel';
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
             <Route path="/my-score" element={<Layout><MyScorePanel /></Layout>} /> {/* ✅ 추가된 내 스코어 페이지 */}
             <Route path="/all-scores" element={<Layout><AllScoresPanel /></Layout>} /> {/* ✅ 전체 스코어 페이지 */}
             <Route path="/admin/golf" element={<Layout><AdminGolfPage /></Layout>} />
+            <Route path="/admin/members" element={<Layout><AdminMemberPanel /></Layout>} />
+
           </Routes>
         </Router>
       </ThemeProvider>

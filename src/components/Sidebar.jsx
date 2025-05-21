@@ -1,10 +1,15 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-function Sidebar({ isOpen, onClose }) {
+function Sidebar({ isOpen, onClose, isMobile }) {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   console.log('🔍 Sidebar rendered. isOpen:', isOpen);
+
+  const handleNav = (path) => {
+    navigate(path);
+    if (isMobile) onClose();
+  };
 
   return (
     <aside
@@ -22,35 +27,43 @@ function Sidebar({ isOpen, onClose }) {
       <nav className="space-y-2">
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/')}
+          onClick={() => handleNav('/')}
         >
           🏠 홈
         </button>
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/my-score')}
+          onClick={() => handleNav('/my-score')}
         >
           🏌️ 내 스코어
         </button>
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/all-scores')}
+          onClick={() => handleNav('/all-scores')}
         >
           📊 전체 스코어
         </button>
         <button
           className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-          onClick={() => navigate('/settings')}
+          onClick={() => handleNav('/settings')}
         >
           ⚙️ 설정
         </button>
         {isAdmin && (
-          <button
-            className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
-            onClick={() => navigate('/admin/golf')}
-          >
-            🛡️ 관리자 전용
-          </button>
+          <>
+            <button
+              className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
+              onClick={() => handleNav('/admin/golf')}
+            >
+              🛡️ 관리자 전용
+            </button>
+            <button
+              className="block w-full text-left px-2 py-2 rounded hover:bg-gray-700"
+              onClick={() => handleNav('/admin/members')}
+            >
+              👥 멤버 관리
+            </button>
+          </>
         )}
       </nav>
     </aside>
